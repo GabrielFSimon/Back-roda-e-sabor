@@ -1,5 +1,3 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import express from 'express';
 import './config/env.js';
 import { syncModels } from './models/index.js';
@@ -19,29 +17,39 @@ import pontosRoutes from './routes/pontosRoutes.js';
 import { garantirSeedInicial } from './database/bootstrapSeed.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
 const porta = process.env.API_PORT || 3333;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// CORS — permite o domínio do Vercel (e localhost em dev)
+const ORIGENS_PERMITIDAS = [
+  process.env.FRONTEND_URL,       // ex: https://roda-sabor.vercel.app
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean);
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origem = req.headers.origin;
+  // Em desenvolvimento aceita tudo; em produção valida a origem
+  if (!origem || ORIGENS_PERMITIDAS.includes(origem) || process.env.NODE_ENV !== 'production') {
+    res.header('Access-Control-Allow-Origin', origem || '*');
+  } else {
+    res.header('Access-Control-Allow-Origin', ORIGENS_PERMITIDAS[0]);
+  }
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
-app.use(express.static(path.join(__dirname, '../public')));
-
+// Health check — usado pelo Render para saber se o serviço está vivo
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', projeto: 'Roda & Sabor' });
+  res.status(200).json({ status: 'ok', projeto: 'Roda & Sabor API' });
 });
 
+// Rotas de API
 app.post('/api/usuarios/register', usuarioController.criar);
 app.post('/usuarios/register', usuarioController.criar);
 
@@ -59,11 +67,8 @@ app.use('/api/roleta', roletaRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/pontos', pontosRoutes);
 
-app.get(/.*/, (req, res) => {
-  if (req.path.startsWith('/api')) return notFound(req, res);
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
+// 404 para qualquer rota não mapeada
+app.use(notFound);
 app.use(errorHandler);
 
 const startServer = async () => {
@@ -72,10 +77,11 @@ const startServer = async () => {
     await garantirSeedInicial();
 
     app.listen(porta, () => {
-      console.log(`Servidor rodando em http://localhost:${porta}`);
+      console.log(`✅ API rodando em http://localhost:${porta}`);
+      console.log(`   Frontend esperado em: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
     });
   } catch (error) {
-    console.error('Erro ao iniciar o servidor. Confira o PostgreSQL e o arquivo .env.');
+    console.error('Erro ao iniciar o servidor. Confira o PostgreSQL e o .env.');
     console.error(error);
     process.exit(1);
   }
