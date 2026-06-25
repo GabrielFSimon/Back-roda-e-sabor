@@ -130,7 +130,7 @@ export async function garantirSeedInicial() {
     descricao: '200g de picanha grelhada ao ponto, com arroz, feijão tropeiro, farofa e vinagrete.',
     preco: 59.90,
     categoria: 'Prato',
-    urlImagem: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+    urlImagem: 'https://images.unsplash.com/photo-1558030006-450675393462?w=600&q=80',
     ativo: true,
   });
 
@@ -196,7 +196,7 @@ export async function garantirSeedInicial() {
     descricao: 'Mandioca cozida e frita com sal grosso. Crocante por fora, macia por dentro.',
     preco: 13.90,
     categoria: 'Acompanhamento',
-    urlImagem: 'https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=600&q=80',
+    urlImagem: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=600&q=80',
     ativo: true,
   });
 
